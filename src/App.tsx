@@ -1,10 +1,8 @@
-// src/App.tsx
 import React, { useState, useEffect, useRef } from 'react';
 import * as echarts from 'echarts';
 import Papa from 'papaparse';
-import './App.css'; // Import the new CSS file
+import './App.css'; 
 
-// Define the structure of a data row
 interface FuelData {
   Date: string;
   'Petrol RSP': number;
@@ -22,7 +20,6 @@ const App: React.FC = () => {
   const chartRef = useRef<HTMLDivElement>(null);
   const chartInstance = useRef<echarts.ECharts | null>(null);
 
-  // Fetch and parse the CSV data
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -104,7 +101,6 @@ const App: React.FC = () => {
     fetchData();
   }, []);
 
-  // Initialize and update the chart
   useEffect(() => {
     if (data.length > 0 && selectedCity && selectedYear && chartRef.current) {
       if (!chartInstance.current) {
@@ -221,7 +217,6 @@ const App: React.FC = () => {
     }
   }, [data, selectedCity, selectedFuel, selectedYear]);
   
-    // Resize chart with window
     useEffect(() => {
         const resizeChart = () => chartInstance.current?.resize();
         window.addEventListener('resize', resizeChart);
