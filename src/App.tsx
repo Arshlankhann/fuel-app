@@ -76,16 +76,16 @@ const App: React.FC = () => {
 
             const uniqueCities = [...new Set(parsedData.map(item => item.City))].filter(Boolean);
             const uniqueYears = [...new Set(parsedData.map(item => {
-                try {
-                    if (item.Date && !isNaN(new Date(item.Date).getTime())) {
-                        return new Date(item.Date).getFullYear().toString();
-                    }
-                    return null;
-                } catch (e) { return null; }
+              try {
+                if (item.Date && !isNaN(new Date(item.Date).getTime())) {
+                  return new Date(item.Date).getFullYear().toString();
+                }
+                return null;
+              } catch (e) { return null; }
             }))].filter((year): year is string => year !== null);
-            
+
             const sortedYears = uniqueYears.sort((a, b) => parseInt(b) - parseInt(a));
-            
+
             setCities(uniqueCities);
             setYears(sortedYears);
 
@@ -104,16 +104,16 @@ const App: React.FC = () => {
   useEffect(() => {
     if (data.length > 0 && selectedCity && selectedYear && chartRef.current) {
       if (!chartInstance.current) {
-        chartInstance.current = echarts.init(chartRef.current, 'light');
+        chartInstance.current = echarts.init(chartRef.current);
       }
 
       const filteredData = data.filter(
         item => {
-            try {
-                return item.City === selectedCity && new Date(item.Date).getFullYear().toString() === selectedYear;
-            } catch (e) {
-                return false;
-            }
+          try {
+            return item.City === selectedCity && new Date(item.Date).getFullYear().toString() === selectedYear;
+          } catch (e) {
+            return false;
+          }
         }
       );
 
@@ -122,36 +122,40 @@ const App: React.FC = () => {
       filteredData.forEach(item => {
         const date = new Date(item.Date);
         if (!isNaN(date.getTime())) {
-            const month = date.getMonth();
-            const price = item[selectedFuel as keyof Omit<FuelData, 'Date' | 'City'>] as number;
-            if (price > 0) {
-                monthlyAverage[month].sum += price;
-                monthlyAverage[month].count++;
-            }
+          const month = date.getMonth();
+          const price = item[selectedFuel as keyof Omit<FuelData, 'Date' | 'City'>] as number;
+          if (price > 0) {
+            monthlyAverage[month].sum += price;
+            monthlyAverage[month].count++;
+          }
         }
       });
-      
+
       const chartData = monthlyAverage.map(month => month.count > 0 ? (month.sum / month.count) : 0);
+
+      const petrolColor = '#4682B4'; 
+      const dieselColor = '#708090'; 
+      const petrolHoverColor = '#5a9bd5';
+      const dieselHoverColor = '#778899'; 
+
+      const barColor = selectedFuel === 'Petrol RSP' ? petrolColor : dieselColor;
+      const hoverColor = selectedFuel === 'Petrol RSP' ? petrolHoverColor : dieselHoverColor;
 
       const option = {
         title: {
           text: `Monthly Average RSP for ${selectedFuel.split(' ')[0]} in ${selectedCity} (${selectedYear})`,
           left: 'center',
           textStyle: {
-            color: '#37474f',
+            color: '#333',
             fontWeight: 'normal',
-            fontSize: 16
+            fontSize: 16,
+            fontFamily: 'Georgia, serif'
           }
         },
         tooltip: {
           trigger: 'axis',
           axisPointer: { type: 'shadow' },
           valueFormatter: (value: number | string) => typeof value === 'number' ? `₹${value.toFixed(2)}` : value,
-          backgroundColor: 'rgba(50,50,50,0.7)',
-          borderColor: '#333',
-          textStyle: {
-            color: '#fff'
-          }
         },
         grid: {
           left: '3%',
@@ -164,27 +168,27 @@ const App: React.FC = () => {
           data: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
           axisLine: {
             lineStyle: {
-              color: '#90a4ae'
+              color: '#aaa'
             }
           },
           axisLabel: {
-            color: '#546e7a'
+            color: '#555'
           }
         },
         yAxis: {
           type: 'value',
           name: 'Average RSP (₹)',
           nameTextStyle: {
-            color: '#546e7a'
+            color: '#555'
           },
           axisLabel: {
             formatter: '{value}',
-            color: '#546e7a'
+            color: '#555'
           },
           splitLine: {
             lineStyle: {
               type: 'dashed',
-              color: '#eceff1'
+              color: '#e0e0e0'
             }
           }
         },
@@ -195,18 +199,11 @@ const App: React.FC = () => {
             barWidth: '60%',
             data: chartData,
             itemStyle: {
-              color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                { offset: 0, color: '#80deea' },
-                { offset: 1, color: '#0097a7' }
-              ]),
-              borderRadius: [4, 4, 0, 0]
+              color: barColor
             },
             emphasis: {
               itemStyle: {
-                color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                  { offset: 0, color: '#26c6da' },
-                  { offset: 1, color: '#006064' }
-                ])
+                color: hoverColor 
               }
             }
           },
@@ -216,15 +213,15 @@ const App: React.FC = () => {
       chartInstance.current.setOption(option, true);
     }
   }, [data, selectedCity, selectedFuel, selectedYear]);
-  
-    useEffect(() => {
-        const resizeChart = () => chartInstance.current?.resize();
-        window.addEventListener('resize', resizeChart);
-        return () => {
-            window.removeEventListener('resize', resizeChart);
-            chartInstance.current?.dispose();
-        };
-    }, []);
+
+  useEffect(() => {
+    const resizeChart = () => chartInstance.current?.resize();
+    window.addEventListener('resize', resizeChart);
+    return () => {
+      window.removeEventListener('resize', resizeChart);
+      chartInstance.current?.dispose();
+    };
+  }, []);
 
 
   return (
